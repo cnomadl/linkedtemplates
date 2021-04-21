@@ -1,0 +1,48 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmName": {
+            "type": "string"
+        },
+        "trainerInitials": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+        "createdBy": {
+            "type": "string"
+        },
+        "resourceGroupCleanup": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "vmNamePrefix": "[toUpper(concat(parameters('vmName'), parameters('trainerInitials')))]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(variables('vmNamePrefix'), '-ip')]",
+            "location": "[parameters('location')]",
+            "tags": {
+                "Displayname": "Public IP Address",
+                "Dept": "[resourceGroup().tags['Dept']]",
+                "Created By": "[parameters('createdBy')]",
+                "Cleanup": "[parameters('resourceGroupCleanup')]"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[toLower(concat('baltic-', variables('vmNamePrefix')))]"
+                }
+            },
+            "sku": {
+                "name": "Basic"
+            }
+        }
+    ],
+    "outputs": {}
+}

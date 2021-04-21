@@ -1,0 +1,69 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string"
+        },
+        "createdBy": {
+            "type": "string"
+        },
+        "resourceGroupCleanup": {
+            "type": "string"
+        },
+        "privateIpAddressSpace": {
+            "type": "string"
+        },
+        "subnetName": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "vnetName": "[concat(resourceGroup().name, '-vent')]",
+        "addressPrefixes": "[concat(parameters('privateIpAddressSpace'), '.0.0/16')]",
+        "subnetAddressPrefix": "[concat(parameters('privateIpAddressSpace'), '.0.0/24')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2020-11-01",
+            "name": "[variables('vnetName')]",
+            "location": "[parameters('location')]",
+            "tags": {
+                "Displayname": "Virtual Network",
+                "Dept": "[resourceGroup().tags['Dept']]",
+                "Created By": "[parameters('createdBy')]",
+                "Cleanup": "[parameters('resourceGroupCleanup')]"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('addressPrefixes')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[parameters('subnetName')]",
+                        "properties": {
+                            "addressPrefix": "[variables('subnetAddressPrefix')]"
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "vnetName": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')))]"
+        },
+        "subnetName": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))).properties.subnets.name]"
+        },
+        "vnetId": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/virtualNetworks', variables('vnetName')))]"
+        }
+    }
+}

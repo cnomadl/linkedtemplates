@@ -1,0 +1,366 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "ukwest",
+            "allowedValues": [
+                "ukwest",
+                "uksouth"
+            ],
+            "metadata": {
+                "description": "Location to store the resource group and all vm's."
+            }
+        },
+        "vmName": {
+            "type": "string",
+            "metadata": {
+                "description": "Virtual Machine name e.g. 306Client."
+            }
+        },
+        "vmCount": {
+            "type": "int",
+            "minValue": 1,
+            "maxValue": 20,
+            "metadata": {
+                "decription": "Number of Virtual Machines required between 1 and 20 e.g. 5"
+            }
+        },
+        "createdBy": {
+            "type": "string",
+            "metadata": {
+                "description": "Please enter your name 'Firstname Surname'"
+            }
+        },
+        "trainerInitials": {
+            "type": "string",
+            "metadata": {
+                "description": "Trainer initials used to create a unique resources."
+            }
+        },
+        "schedule": {
+            "type": "string",
+            "defaultValue": "No",
+            "allowedValues": [
+                "Yes",
+                "No"
+            ],
+            "metadata": {
+                "description": "Should these VMs start automaticly at the begining of each day 'Yes' or 'No'"
+            }
+        },
+        "resourceGroupCleanup": {
+            "type": "string",
+            "defaultValue": "Enabled",
+            "allowedValues": [
+                "Disabled",
+                "Enabled"
+            ],
+            "metadata": {
+                "description": "Choose whether or not to have the VM and associated resourced automatically deleted at the end of the week"
+            }
+        },
+        "osDisktype": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [
+                "Standard_LRS"
+            ],
+            "metadata": {
+                "description": "Type of storage Standard HDD, SSD or Premium."
+            }
+        },
+        "vmSize": {
+            "type": "string",
+            "defaultValue": "Standard_D2s_v3",
+            "allowedValues": [
+                "Standard_B1ms",
+                "Standard_D2s_v3"
+            ],
+            "metadata": {
+                "description": "Virtual Machine size."
+            }
+        },
+        "osPlatform": {
+            "type": "string",
+            "allowedValues": [
+                "Windows",
+                "Linux"
+            ],
+            "metadata": {
+                "description": "Select the custom OS type to deploy"
+            }
+        },
+        "operatingSystem": {
+            "type": "string",
+            "allowedValues": [
+                "Windows10Desktop",
+                "WindowsServer2016",
+                "UbuntuServer"
+            ],
+            "metadata": {
+                "description": "Choose your operating system."
+            }
+        },
+        "imageVersion": {
+            "type": "string",
+            "defaultValue": "latest",
+            "allowedValues": [
+                "latest",
+                "1.01.21",
+                "1.12.20"
+            ],
+            "metadata": {
+                "description": "The should be the version you wish to use. To use the latest version use the default value or specify the version you want to use e.g. 1.0.0 or 1.20.4"
+            }
+        },
+        "adminUsername": {
+            "type": "string",
+            "metadata": {
+                "description": "Admin username for the Virtual Machine."
+            }
+        },
+        "authenticationType": {
+            "type": "string",
+            "defaultValue": "Password",
+            "allowedValues": [
+                "Password",
+                "sshPublicKey"
+            ],
+            "metadata": {
+                "descriptopn": "The type of authentication used on the virtual machine. SSH is recommended for Linux VMs"
+            }
+        },
+        "adminPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Admin password for the Virtual Machine. If Linux SSH is recommended."
+            }
+        },
+        "sshPublicKeyString": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Admin password for the Virtual Machine. If Linux SSH is recommended."
+            }
+        },
+        "localUsername": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "None admin username"
+            }
+        },
+        "localUserPassword": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "None admin user password. If Linux SSH is recommended."
+            }
+        }
+    },
+    "variables": {
+        "vmNamePrefix": "[toUpper(concat(parameters('vmName'), parameters('trainerInitials')))]",
+        "_artifactsLocation": "https://raw.githubusercontent.com/balticapprenticeships/",
+        "_templateRepo": "azure-templates/master/linkedTemplates"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-10-01",
+            "name": "Deploy_NetworkInterface",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(variables('_artifactsLocation'), variables('_templateRepo'), '/networkInterface.json')]",
+                    "contentVersion": ""
+                },
+                "parameters": {
+                    "vmName": {
+                        "type": "string"
+                    },
+                    "trainerInitials": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "createdBy": {
+                        "type": "string"
+                    },
+                    "resourceGroupCleanup": {
+                        "type": "string"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-10-01",
+            "name": "Deploy_NetworkSecurityGroup",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(variables('_artifactsLocation'), variables('_templateRepo'), '/nsg.json')]",
+                    "contentVersion": ""
+                },
+                "parameters": {
+                    "location": {
+                        "type": "string"
+                    },
+                    "createdBy": {
+                        "type": "string"
+                    },
+                    "resourceGroupCleanup": {
+                        "type": "string"
+                    },
+                    "osPlatform": {
+                        "type": "string"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-10-01",
+            "name": "Deploy_VirtualNetwork",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(variables('_artifactsLocation'), variables('_templateRepo'), '/virtualNetwork.json')]",
+                    "contentVersion": ""
+                },
+                "parameters": {
+                    "location": {
+                        "type": "string"
+                    },
+                    "createdBy": {
+                        "type": "string"
+                    },
+                    "resourceGroupCleanup": {
+                        "type": "string"
+                    },
+                    "privateIpAddressSpace": {
+                        "type": "string"
+                    },
+                    "subnetName": {
+                        "type": "string"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-10-01",
+            "name": "Deploy_PublicIpAddress",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(variables('_artifactsLocation'), variables('_templateRepo'), '/pip.json')]",
+                    "contentVersion": ""
+                },
+                "parameters": {
+                    "vmName": {
+                        "type": "string"
+                    },
+                    "trainerInitials": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "createdBy": {
+                        "type": "string"
+                    },
+                    "resourceGroupCleanup": {
+                        "type": "string"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-10-01",
+            "name": "Deploy_VirtualMachine",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[concat(variables('_artifactsLocation'), variables('_templateRepo'), '/windowsVm.json')]",
+                    "contentVersion": ""
+                },
+                "parameters": {
+                    "vmName": {
+                        "type": "string"
+                    },
+                    "trainerInitials": {
+                        "type": "string"
+                    },
+                    "location": {
+                        "type": "string"
+                    },
+                    "createdBy": {
+                        "type": "string"
+                    },
+                    "resourceGroupCleanup": {
+                        "type": "string"
+                    },
+                    "schedule": {
+                        "type": "string"
+                    },
+                    "vmSize": {
+                        "type": "string"
+                    },
+                    "osDiskType": {
+                        "type": "string"
+                    },
+                    "operatingSystem": {
+                        "type": "string"
+                    },
+                    "imageVersion": {
+                        "type": "string"
+                    },
+                    "adminUsername": {
+                        "type": "string"
+                    },
+                    "adminPassword": {
+                        "type": "string"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "type": "Microsoft.DevTestLab/schedules",
+            "apiVersion": "2018-09-15",
+            "name": "[concat('shutdown-computevm-', variables('vmNamePrefix'))]",
+            "location": "[parameters('location')]",
+            "tags": {
+                "Displayname": "Shutdown Schedule",
+                "Dept": "[resourceGroup().tags['Dept']]",
+                "Created By": "[parameters('createdBy')]",
+                "Cleanup": "[parameters('resourceGroupCleanup')]"
+            },
+            "dependsOn": [],
+            "properties": {
+                "status": "Enabled",
+                "taskType": "ComputeVmShutdownTask",
+                "dailyRecurrence": {
+                    "time": "17:00"
+                },
+                "timeZoneId": "GMT Standard Time",
+                "targetResourceId": "[reference('windowsVm').outputs.vmId.value]",
+                "notificationSettings": {
+                    "status": "Disabled",
+                    "notificationLocale": "en",
+                    "timeInMinutes": 30
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}

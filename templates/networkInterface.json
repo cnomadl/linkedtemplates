@@ -1,0 +1,68 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "vmName": {
+            "type": "string"
+        },
+        "trainerInitials": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string"
+        },
+        "createdBy": {
+            "type": "string"
+        },
+        "resourceGroupCleanup": {
+            "type": "string"
+        }
+    },
+    "variables": {
+        "vmNamePrefix": "[toUpper(concat(parameters('vmName'), parameters('trainerInitials')))]",
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Network/networkInterfaces",
+            "apiVersion": "2020-11-01",
+            "name": "[concat(variables('vmNamePrefix'), '-nic')]",
+            "location": "[parameters('location')]",
+            "tags": {
+                "Displayname": "Network Interface",
+                "Dept": "[resourceGroup().tags['Dept']]",
+                "Created By": "[parameters('createdBy')]",
+                "Cleanup": "[parameters('resourceGroupCleanup')]"
+            },
+            "dependsOn": [
+                "nsg",
+                "vnet",
+                "pip"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "ipconfig1",
+                        "properties": {
+                            "subnet": {
+                                "id": "[reference('networkInterface').outputs.subnetName.value]"
+                            },
+                            "privateIPAllocationMethod": "Dynamic",
+                            "publicIPAddress": {
+                                "id": "[reference('pip')]"
+                            }
+                        }
+                    }
+                ],
+                "networkSecurityGroup": {
+                    "id": "[reference('nsg').outputs.nsgId.value]"
+                }
+            }
+        }
+    ],
+    "outputs": {
+        "networkInterfaceId": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Network/networkInterfaces', concat(variables('vmNamePrefix'), '-nic')))]"
+        }
+    }
+}
